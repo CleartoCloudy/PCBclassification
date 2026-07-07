@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# 虚拟环境
+venv/
+env/
+.venv/
+
+# 数据集（过大，不提交）
+datasets/DeepPCB_original/*
+datasets/PCB_Classification/*
+!datasets/DeepPCB_original/.gitkeep
+!datasets/PCB_Classification/.gitkeep
+
+# 运行结果
+results/models/*
+results/figures/*
+results/confusion_matrix/*
+results/logs/*
+results/reports/*
+!results/models/.gitkeep
+!results/figures/.gitkeep
+!results/confusion_matrix/.gitkeep
+!results/logs/.gitkeep
+!results/reports/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 系统文件
+.DS_Store
+Thumbs.db
