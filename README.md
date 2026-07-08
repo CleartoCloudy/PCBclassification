@@ -2,7 +2,7 @@
 
 > Author: CleartoCloudy
 
-模式识别课程设计大作业。实现 HOG+SVM、LBP+SVM、ResNet18、MobileNetV3 四种方法对 PCB 缺陷图像进行分类，并进行性能比较分析。
+模式识别课程设计大作业。实现 HOG+SVM、LBP+SVM、ResNet18、MobileNetV3 对 PCB 缺陷进行分类，并用 Faster R-CNN 进行目标检测，完成性能比较分析。
 
 ## 项目结构
 
@@ -39,6 +39,13 @@ PCB_Classification/
 │       ├── resnet18.py        #   ResNet18（基础/SE/CBAM）
 │       └── mobilenetv3.py     #   MobileNetV3 Small
 │
+├── detection/                 # 目标检测模块
+│   ├── dataset.py             #   检测数据集（大图 + bbox 标注）
+│   ├── model.py               #   Faster R-CNN (ResNet50-FPN, 小目标锚框优化)
+│   ├── train.py               #   训练脚本（mAP@0.5 评估 + 早停）
+│   ├── predict.py             #   推理 + 在原图画检测框
+│   └── evaluate.py            #   测试集 mAP 评估
+│
 ├── evaluation/                # 评估与可视化
 │   ├── evaluate.py            #   统一评估：所有模型测试集指标
 │   ├── visualize.py           #   训练曲线、混淆矩阵、对比图表
@@ -63,6 +70,7 @@ PCB_Classification/
 | 实验三 | ResNet18 (CLAHE预处理) | 基础深度学习 |
 | 实验四 | MobileNetV3 (CLAHE预处理) | 轻量级深度学习 |
 | 实验五 | ResNet18 + SE/CBAM 注意力 | 网络结构优化改进 |
+| 实验六 | Faster R-CNN (ResNet50-FPN) | 目标检测（大图→缺陷位置+类别） |
 
 ## 前置工作：环境准备
 
@@ -222,6 +230,12 @@ python main.py train resnet18_cbam # 仅实验五: ResNet18+CBAM注意力
 
 训练后的模型保存在 `results/models/` 目录下。
 
+> **目标检测实验**：训练 Faster R-CNN，对整张 PCB 大图检测所有缺陷的位置和类别：
+> ```bash
+> python main.py detect train      # 训练检测模型
+> python main.py detect evaluate   # 测试集 mAP 评估
+> ```
+
 ---
 
 #### 步骤3：评估模型并生成报告
@@ -278,6 +292,13 @@ python main.py predict --model resnet18 --image path/to/your/defect_image.jpg
 ```
 
 支持的 model 参数：`hog_svm`, `lbp_svm`, `resnet18`, `resnet18_se`, `resnet18_cbam`, `mobilenetv3`
+
+> **检测预测**：对整张 PCB 大图进行缺陷检测（画框 + 标签）：
+> ```bash
+> python main.py detect predict --image path/to/pcb_image.jpg
+> python main.py detect predict --image datasets/DeepPCB_original/DeepPCB/PCBData/group00041/00041/
+> ```
+> 结果保存在 `results/reports/detection_YYYYMMDD_HHMMSS/`（标注图 + JSON）
 
 ---
 
@@ -418,6 +439,9 @@ SVM_KERNEL = "rbf"
 | 实验报告 (Markdown) | `results/reports/experiment_report_*.md` |
 | 实验报告 (JSON) | `results/reports/experiment_report_*.json` |
 | 最新报告快捷副本 | `results/reports/latest_report.md` |
+| 检测模型权重 | `results/models/detection_faster_rcnn_best.pth` |
+| 检测历史/评估 | `results/logs/detection_history.json`, `detection_result.json` |
+| 检测结果标注图 | `results/reports/detection_*/det_*.jpg` |
 
 ---
 

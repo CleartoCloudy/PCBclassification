@@ -146,6 +146,27 @@ def load_model_results():
     return results
 
 
+def load_detection_results():
+    """加载检测模型结果"""
+    info = {"available": False}
+    hist_path = os.path.join(LOGS_DIR, "detection_history.json")
+    if os.path.exists(hist_path):
+        with open(hist_path, "r") as f:
+            hist = json.load(f)
+        info.update({
+            "available": True,
+            "params_M": hist.get("params_M", 0),
+            "train_time_s": hist.get("train_time_s", 0),
+            "best_mAP": hist.get("best_mAP", 0),
+        })
+    result_path = os.path.join(LOGS_DIR, "detection_result.json")
+    if os.path.exists(result_path):
+        with open(result_path, "r") as f:
+            r = json.load(f)
+        info["test_mAP"] = r.get("mAP50", 0)
+    return info
+
+
 def get_env_info():
     """收集运行环境信息"""
     info = {
@@ -419,6 +440,21 @@ def generate_markdown_report(results, dataset_stats, env_info, timestamp_readabl
         lines.append("> 无深度学习模型结果\n")
     lines.append("")
 
+    # ========== 5.5 目标检测（可选） ==========
+    det_info = load_detection_results()
+    if det_info["available"]:
+        lines.append(_md_header("五、目标检测 (Faster R-CNN)", 2))
+        lines.append(f"- **模型**: Faster R-CNN (ResNet50-FPN)")
+        lines.append(f"- **参数量**: {det_info['params_M']:.2f} M")
+        lines.append(f"- **训练耗时**: {det_info.get('train_time_s', 0) / 60:.1f} 分钟")
+        lines.append(f"- **最佳 mAP@0.5**: {det_info['best_mAP']:.4f}")
+        if det_info.get("test_mAP"):
+            lines.append(f"- **测试集 mAP@0.5**: {det_info['test_mAP']:.4f}")
+        lines.append("")
+        lines.append("> 检测任务输入完整 PCB 大图（640×640），输出所有缺陷的 bounding box + 类别。")
+        lines.append("> 与分类任务互补：分类判断已定位缺陷的类型，检测从大图中找出全部缺陷的位置并分类。")
+        lines.append("")
+
     # ========== 六、总结 ==========
     lines.append(_md_header("六、总结", 2))
 
@@ -489,6 +525,17 @@ def generate_json_report(results, dataset_stats, env_info, timestamp_readable):
                 entry["confusion_matrix"] = r["cm"].tolist()
         models[name] = entry
     report["models"] = models
+
+    # 目标检测结果
+    det = load_detection_results()
+    if det["available"]:
+        report["detection"] = OrderedDict([
+            ("model", "Faster R-CNN (ResNet50-FPN)"),
+            ("mAP50_val", det["best_mAP"]),
+            ("mAP50_test", det.get("test_mAP")),
+            ("params_M", det["params_M"]),
+            ("train_time_s", det.get("train_time_s")),
+        ])
 
     return report
 
